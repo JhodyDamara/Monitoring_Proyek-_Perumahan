@@ -1,0 +1,539 @@
+<?php
+    class developer extends CI_Controller {
+        public function __construct(){
+            parent::__construct();
+            $this->load->model("main_model");
+            $this->load->model("login_model"); 
+            $login=$this->login_model->isNotLogin();
+            if($login=="admin"){
+                redirect(site_url('admin'));
+            }
+            elseif($login=="Mandor"){
+                redirect(site_url('mandor'));
+            }  
+            elseif($login==false){
+                redirect(site_url());
+            }
+        }
+        public function index(){
+            $data["profile"]=$this->main_model->profile();
+            $this->load->view("developer/developer_view",$data);
+        }
+        public function data_proyek($link1=NULL,$link2=NULL,$link3=NULL,$link4=NULL){
+            if(!isset($link1)){
+                $data["proyek"]=$this->main_model->proyek();
+                $this->load->view("developer/data_proyek_view",$data);
+            } 
+            elseif($link1=="tambah_data_proyek"){
+                if($this->input->post()){
+                    $this->main_model->simpan_data_proyek(); 
+                    redirect(site_url("developer/data_proyek"));
+                }
+                $data["mandor"]=$this->main_model->mandor();
+                $this->load->view("developer/data_proyek/tambah_data_view",$data);
+            }
+            elseif($link1=="update"){
+                if(!isset($link2)){
+                    if($this->input->post()){
+                        if($this->main_model->edit_data_proyek()) redirect(site_url("developer/data_proyek"));
+                    }
+                    $data["update"]=$this->main_model->ambildata($link2);
+                    $data["mandor"]=$this->main_model->mandor();
+                    $this->load->view("developer/data_proyek/edit_view",$data);
+                }
+                else{
+                    $this->main_model->simpan_session("dataproyek",$link2);
+                    redirect(site_url("developer/data_proyek/update"));
+                }
+            }
+            elseif($link1=="hapus_proyek"){
+                if($this->main_model->hapus_data_proyek($link2)) redirect(site_url("developer/data_proyek"));
+            }
+            elseif($link1=="perancangan"){
+                if(!isset($link2)){
+                    $data["perancangan"]=$this->main_model->perancangan();
+                    $data["rancanganpembangunan"]=$this->main_model->rancanganpembangunan();
+                    $data["keuangan"]=$this->main_model->rancangan_anggara();
+                    $this->load->view("developer/data_proyek/perancangan_view",$data);
+                }
+                elseif($link2=="pembangunan"){
+                    if(!isset($link3)){
+                        $data["rancanganpembangunan"]=$this->main_model->rancanganpembangunan();
+                        $this->load->view("developer/data_proyek/perancangan/pembangunan_view",$data);
+                    }
+                    elseif($link3=="tambah_pembangunan"){
+                        if($this->input->post()){
+                            if($this->main_model->simpan_perancangan_pembangunan()) redirect(site_url("developer/data_proyek/perancangan/pembangunan"));
+                        }
+                        $this->load->view("developer/data_proyek/perancangan/pembangunan/tambah_pembangunan_view");
+                    }
+                    elseif($link3=="edit_pembangunan"){
+                        if(!isset($link4)){
+                            if($this->input->post()){
+                                if($this->main_model->edit_perancangan_pembangunan()) redirect(site_url("developer/data_proyek/perancangan/pembangunan"));
+                            }
+                            $data["rancanganpembangunanbyid"]=$this->main_model->rancanganpembangunanbyid();
+                            $this->load->view("developer/data_proyek/perancangan/pembangunan/edit_pembangunan_view",$data);
+                        } 
+                        else{
+                            $this->main_model->simpan_session("datarancanganpembangunan",$link4);
+                            redirect(site_url("developer/data_proyek/perancangan/pembangunan/edit_pembangunan"));
+                        }
+                    }
+                    elseif($link3=="hapus_pembangunan"){
+                        $this->main_model->hapusrancanganpembangunan($link4);
+                        redirect(site_url("developer/data_proyek/perancangan/pembangunan"));
+                    }
+                }
+                elseif($link2=="anggaran"){
+                    if(!isset($link3)) {
+                        $data["tampil"]=$this->main_model->rancangan_anggara();
+                        $this->load->view("developer/data_proyek/perancangan/anggaran_view",$data);
+                    }
+                    elseif($link3=="tambah_anggaran"){
+                        if($this->input->post()){
+                            if($this->main_model->tambah_anggaran()) redirect(site_url("developer/data_proyek/perancangan/anggaran"));
+                        } 
+                        $this->load->view("developer/data_proyek/perancangan/anggaran/tambah_anggaran_view");
+                    }
+                    elseif($link3=="edit_anggaran"){
+                        if(!isset($link4)) {
+                            if($this->input->post()){
+                                if($this->main_model->edit_rancangan_anggara()) redirect(site_url("developer/data_proyek/perancangan/anggaran"));
+                            }
+                            $data["tampil"]=$this->main_model->rancangan_anggara_byid();
+                            $this->load->view("developer/data_proyek/perancangan/anggaran/edit_anggaran_view",$data);
+                        }
+                        else{
+                            $this->main_model->simpan_session("datarancangananggaran",$link4);
+                            redirect(site_url("developer/data_proyek/perancangan/anggaran/edit_anggaran"));
+                        }
+                    }
+                    elseif($link3=="hapus_anggaran"){
+                        $this->main_model->hapusrancangananggaran($link4);
+                        redirect(site_url("developer/data_proyek/perancangan/anggaran"));
+                    }
+                }
+                elseif($link2=="start"){
+                    if($link3!=0 && $link4!=0) {
+                        $this->main_model->start_proyek();
+                        redirect(site_url("developer/data_proyek"));
+                    }
+                    else{
+                        $this->session->set_userdata(['error' => "Perancangan pembangunan dan anggaran biaya belum jelas"]);
+                        redirect(site_url("developer/data_proyek/perancangan"));
+                    }
+                }
+                else{
+                    $this->main_model->simpan_session("dataproyek",$link2);
+                    redirect(site_url("developer/data_proyek/perancangan"));
+                }
+            }
+            elseif($link1=="pembangunan"){
+                if(!isset($link2)) {
+                    $data["perancangan"]=$this->main_model->perancangan(); 
+                    $data["rancanganpembangunan"]=$this->main_model->rancanganpembangunan();
+                    $data["tampil"]=$this->main_model->rancangan_anggara();
+                    $this->load->view("developer/data_proyek/pembangunan_view",$data);
+                }
+                elseif($link2=="perkembangan_pembangunan"){ 
+                    if(!isset($link3)) {
+                        $data["tampil"]=$this->main_model->perkembangan_pembangunan();
+                        $data["tampil1"]=$this->main_model->rancanganpembangunan();
+                        $data["tampil2"]=$this->main_model->perancangan();
+                        $this->load->view("developer/data_proyek/pembangunan/perkembangan_pembangunan_view",$data);
+                    }
+                }
+                elseif($link2=="pengeluaran_keuangan"){
+                    if(!isset($link3)) {
+                        $data["tampil"]=$this->main_model->perancangan();
+                        $data["tampil1"]=$this->main_model->pengeluaran_keuangan();
+                        $this->load->view("developer/data_proyek/pembangunan/pengeluaran_keuangan_view", $data);
+                    }
+                    elseif($link3=="tambah_pengeluaran_keuangan") {
+                        if($this->input->post()){
+                            if($this->main_model->tambah_pengeluaran_keuangan()) redirect(site_url("developer/data_proyek/pembangunan/pengeluaran_keuangan"));
+                        } 
+                        $data["tampil"]=$this->main_model->rancangan_anggara();
+                        $this->load->view("developer/data_proyek/pembangunan/pengeluaran_keuangan/tambah_pengeluaran_view",$data);
+                    }
+                }
+                elseif($link2=="evaluasi"){
+                    if(!isset($link3)){
+                        $data["tampil"]=$this->main_model->tampil_evaluasi();
+                        $data["tampil1"]=$this->main_model->perancangan();
+                        $this->load->view("developer/data_proyek/pembangunan/evaluasi_view",$data);
+                    }
+                    elseif($link3=="tambah_evaluasi") {
+                        if($this->input->post()){
+                            if($this->main_model->evaluasi()) redirect(site_url("developer/data_proyek/pembangunan/evaluasi"));
+                        } 
+                        $this->load->view("developer/data_proyek/pembangunan/evaluasi/tambah_evaluasi_view"); 
+                    }    
+                } 
+                else{
+                    $this->main_model->simpan_session("dataproyek",$link2);
+                    redirect(site_url("developer/data_proyek/pembangunan"));
+                }
+            }
+        }
+        public function pengaturan($link=null,$link1=null){ 
+            if(!isset($link)){
+                if($this->input->post()){
+                    if($this->main_model->edit_akun()) redirect(site_url("login/logout"));
+                }
+                $data['tampil']=$this->main_model->tampil_akun();
+                $this->load->view("developer/pengaturan_view",$data);
+            }
+            elseif ($link=="tambah_akun"){
+                if($this->input->post()){
+                    if($this->main_model->tambah_akun()) redirect(site_url("developer/pengaturan")); 
+                }
+                $this->load->view("developer/pengaturan/tambah_akun_view");
+            } 
+            elseif ($link=="edit_akun"){
+                if(!isset($link1)){
+                    if($this->input->post()){
+                        if($this->main_model->edit_akun()) redirect(site_url("developer/pengaturan"));
+                    }
+                    $data['tampil']=$this->main_model->tampil_edit();
+                    $this->load->view("developer/pengaturan/edit_akun_view",$data);
+                }
+                else{
+                    $this->main_model->simpan_session("editakun",$link1);
+                    redirect(site_url("developer/pengaturan/edit_akun"));
+                }
+            }
+            elseif ($link=="hapus_akun") {
+                if($this->main_model->hapus_akun($link1)) redirect(site_url("developer/pengaturan"));
+            }
+        }
+        public function data_tipe_pembangunan($link=null,$link1=null,$link2=null,$link3=null){
+            if(!isset($link)){
+                $data['data_tipe_pembangunan']=$this->main_model->data_tipe_pembangunan();
+                $this->load->view("developer/data_tipe_view",$data);
+            }
+            elseif($link=="tambah"){
+                if(!isset($link1)){
+                    if($this->input->post()){
+                        if($this->main_model->tambah_data()) redirect(site_url("developer/data_tipe_pembangunan"));
+                    }
+                    $data['tambah_data_tipe']=$this->main_model->tambah_data_tipe();
+                    $this->load->view("developer/data_tipe_view/tambah",$data);
+                }
+                elseif($link1=="pembangunan"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            if($this->main_model->data_tambah_pembangunan()) redirect(site_url("developer/data_tipe_pembangunan/tambah"));
+                        } 
+                        $this->load->view("developer/data_tipe_view/tambah/pembangunan");
+                    }
+                    elseif($link2=="edit"){
+                        if(!isset($link3)){
+                            if($this->input->post()){
+                                $this->main_model->pembangunan_edit();
+                                redirect(site_url("developer/data_tipe_pembangunan/tambah"));
+                            }
+                            $data['tambah_pembangunan_edit']=$this->main_model->tambah_pembangunan_edit();
+                            $this->load->view("developer/data_tipe_view/tambah/pembangunan/edit",$data);
+                        }
+                        else{
+                            $this->main_model->simpan_session("id",$link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/tambah/pembangunan/edit"));
+                        }
+                    }
+                    elseif($link2=="hapus"){
+                        if(isset($link3)){
+                            $this->main_model->tambah_pembangunan_hapus($link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/tambah"));
+                        }
+                    }
+                }
+                elseif($link1=="anggaran"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            if($this->main_model->data_tambah_anggaran()) redirect(site_url("developer/data_tipe_pembangunan/tambah"));
+                        } 
+                        $this->load->view("developer/data_tipe_view/tambah/anggaran");
+                    }
+                    elseif($link2=="edit"){
+                        if(!isset($link3)){
+                            if($this->input->post()){
+                                $this->main_model->anggaran_edit();
+                                redirect(site_url("developer/data_tipe_pembangunan/tambah"));
+                            }
+                            $data['tambah_anggaran_edit']=$this->main_model->tambah_anggaran_edit();
+                            $this->load->view("developer/data_tipe_view/tambah/anggaran/edit",$data);
+                        }
+                        else{
+                            $this->main_model->simpan_session("id",$link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/tambah/anggaran/edit"));
+                        }
+                    }
+                    elseif($link2=="hapus"){
+                        if(isset($link3)){
+                            $this->main_model->tambah_anggaran_hapus($link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/tambah"));
+                        }
+                    }
+                }
+                elseif($link1=="batal"){
+                    $this->main_model->data_tambah_batal();
+                    redirect(site_url("developer/data_tipe_pembangunan"));
+                }
+            }
+            elseif($link=="edit"){
+                if(!isset($link1)){
+                    if($this->input->post()){
+                        $this->main_model->edit_data_tipe();
+                        redirect(site_url("developer/data_tipe_pembangunan"));
+                    }
+                    $data['data_tipe_edit']=$this->main_model->data_tipe_edit();
+                    $this->load->view("developer/data_tipe_view/edit",$data);
+                }
+                elseif($link1=="pekerjaan"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            if($this->main_model->data_edit_pekerjaan()) redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                        }
+                        $this->load->view("developer/data_tipe_view/tambah/pembangunan");
+                    }
+                    elseif($link2=="edit"){
+                        if(!isset($link3)){
+                            if($this->input->post()){
+                                $this->main_model->pembangunan_edit();
+                                redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                            }
+                            $data['tambah_pembangunan_edit']=$this->main_model->tambah_pembangunan_edit();
+                            $this->load->view("developer/data_tipe_view/tambah/pembangunan/edit",$data);
+                        }
+                        else{
+                            $this->main_model->simpan_session("id",$link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/edit/pekerjaan/edit"));
+                        }
+                    }
+                    elseif($link2=="hapus"){
+                        if(isset($link3)){
+                            $this->main_model->tambah_pembangunan_hapus($link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                        }
+                    }
+                }
+                elseif($link1=="anggaran"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            if($this->main_model->data_edit_anggaran()) redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                        }
+                        $this->load->view("developer/data_tipe_view/tambah/anggaran");
+                    } 
+                    elseif($link2=="edit"){
+                        if(!isset($link3)){
+                            if($this->input->post()){
+                                $this->main_model->anggaran_edit();
+                                redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                            }
+                            $data['tambah_anggaran_edit']=$this->main_model->tambah_anggaran_edit();
+                            $this->load->view("developer/data_tipe_view/tambah/anggaran/edit",$data);
+                        }
+                        else{
+                            $this->main_model->simpan_session("id",$link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/edit/anggaran/edit"));
+                        }
+                    }
+                    elseif($link2=="hapus"){
+                        if(isset($link3)){
+                            $this->main_model->tambah_anggaran_hapus($link3);
+                            redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                        }
+                    }
+                }
+                else{
+                    $this->main_model->simpan_session("id1",$link1);
+                    redirect(site_url("developer/data_tipe_pembangunan/edit"));
+                }
+            }
+            elseif($link=="hapus"){
+                $this->main_model->data_tipe_hapus($link1);
+                redirect(site_url("developer/data_tipe_pembangunan"));
+            }
+        }
+        public function jumlahblok($link=null, $byk=null){
+            $this->main_model->jumlahblok($link, $byk);
+        }
+        public function data_perancangan_proyek($link=null, $link1=null, $link2=null){
+            if(!isset($link)){
+                $data['data_perancangan_proyek']=$this->main_model->data_proyek_status("perancangan");
+                $this->load->view("developer/data_perancangan_view",$data);
+            }
+            elseif($link=="tambah_data_perancangan"){
+                if($this->input->post()){
+                    if($this->main_model->simpan_data_proyek()) redirect(site_url("developer/data_perancangan_proyek"));
+                }
+                $data["mandor"]=$this->main_model->mandor();
+                $this->load->view("developer/data_perancangan/tambah_data_view",$data);
+            }
+            elseif($link=="lihat_data_perancangan"){
+                if(!isset($link1)){
+                    $data['data_perancangan_lihat']=$this->main_model->data_perancangan_lihat(); 
+                    $this->load->view("developer/data_perancangan/lihat_data_view",$data);
+                }
+                elseif ($link1=="start_proyek") {
+                    $this->main_model->start_rancangan_proyek(); 
+                    redirect(site_url("developer/data_perancangan_proyek"));
+                }
+                elseif($link1=="tambah_target_pekerjaan"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            if($this->main_model->tambah_target_pekerjaan()) redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                        }
+                        $this->load->view("developer/data_perancangan/lihat_data/tambah_target_view");
+                    }
+                    else{
+                        $this->main_model->simpan_session("id1",$link2);
+                        redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan/tambah_target_pekerjaan"));
+                    }                    
+                }
+                elseif($link1=="edit_target_pekerjaan"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            $this->main_model->edit_target_pekerjaan(); 
+                            redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                        }
+                        $data['data_target_pembangunan']=$this->main_model->data_target_pembangunan();
+                        $this->load->view("developer/data_perancangan/lihat_data/edit_target_view",$data);
+                    }
+                    else{
+                        $this->main_model->simpan_session("id1",$link2);
+                        redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan/edit_target_pekerjaan"));
+                    } 
+                }
+                elseif($link1=="hapus_target_pekerjaan"){
+                    $this->main_model->hapus_target_pekerjaan($link2); 
+                    redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                }
+                elseif ($link1=="tambah_rancangan_anggaran") {
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            if($this->main_model->tambah_rancangan_anggaran()) redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                        }
+                        $this->load->view("developer/data_perancangan/lihat_data/tambah_rancangan_view");
+                    }
+                    else{
+                        $this->main_model->simpan_session("id1",$link2);
+                        redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan/tambah_rancangan_anggaran"));
+                    }  
+                }
+                elseif ($link1=="edit_rancangan_anggaran") {
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            $this->main_model->edit_rancangan_anggaran(); 
+                            redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                        }
+                        $data['data_target_keuangan']=$this->main_model->data_target_keuangan();
+                        $this->load->view("developer/data_perancangan/lihat_data/edit_rancangan_view",$data);
+                    }
+                    else{
+                        $this->main_model->simpan_session("id1",$link2);
+                        redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan/edit_rancangan_anggaran"));
+                    } 
+                }
+                elseif($link1=="hapus_rancangan_anggaran"){
+                    $this->main_model->hapus_rancangan_anggaran($link2); 
+                    redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                }
+                else{
+                    $this->main_model->simpan_session("id",$link1);
+                    redirect(site_url("developer/data_perancangan_proyek/lihat_data_perancangan"));
+                }
+            }
+            elseif($link=="edit_data_perancangan"){
+                if(!isset($link1)){
+                    if($this->input->post()){
+                        $this->main_model->edit_data_perancangan(); 
+                        redirect(site_url("developer/data_perancangan_proyek"));
+                    }
+                    $data['data_proyek']=$this->main_model->data_proyek(); 
+                    $data["mandor"]=$this->main_model->mandor();
+                    $this->load->view("developer/data_perancangan/edit_data_view",$data);
+                }
+                else{
+                    $this->main_model->simpan_session("id",$link1);
+                    redirect(site_url("developer/data_perancangan_proyek/edit_data_perancangan"));
+                }
+            }
+            elseif($link=="hapus_data_perancangan"){
+                $this->main_model->hapus_data_perancangan($link1); 
+                redirect(site_url("developer/data_perancangan_proyek"));
+            }
+        }
+        public function data_pembangunan_proyek($link=null,$link1=null,$link2=null){
+            if(!isset($link)){
+                $data['data_proyek_status']=$this->main_model->data_pembangunan_proyek();
+                $this->load->view("developer/data_pembangunan_view",$data);
+            }
+            elseif($link=="lihat_data_pembangunan"){
+                if(!isset($link1)){
+                    $data['lihat_data_pembangunan']=$this->main_model->lihat_data_pembangunan();
+                    $this->load->view("developer/data_pembangunan/lihat_data_view",$data);
+                }
+                elseif ($link1=="tambah_evaluasi_proyek") {
+                    if($this->input->post()){
+                        if($this->main_model->tambah_evaluasi_proyek()) redirect(site_url("developer/data_pembangunan_proyek/lihat_data_pembangunan"));
+                    }
+                    $this->load->view("developer/data_pembangunan/lihat_data/tambah_evaluasi_view");
+                }
+                elseif ($link1=="edit_evaluasi_proyek"){
+                    if(!isset($link2)){
+                        if($this->input->post()){
+                            $this->main_model->edit_evaluasi_proyek(); 
+                            redirect(site_url("developer/data_pembangunan_proyek/lihat_data_pembangunan"));
+                        }
+                        $data['data_evaluasi']=$this->main_model->data_evaluasi();
+                        $this->load->view("developer/data_pembangunan/lihat_data/edit_evaluasi_view",$data);
+                    }
+                    else{
+                        $this->main_model->simpan_session("id1",$link2); 
+                        redirect(site_url("developer/data_pembangunan_proyek/lihat_data_pembangunan/edit_evaluasi_proyek"));
+                    }
+                }
+                elseif ($link1=="hapus_evaluasi_proyek"){
+                    $this->main_model->hapus_evaluasi_proyek($link2); 
+                    redirect(site_url("developer/data_pembangunan_proyek/lihat_data_pembangunan"));
+                }
+                else{
+                    $this->main_model->simpan_session("id",$link1); 
+                    redirect(site_url("developer/data_pembangunan_proyek/lihat_data_pembangunan"));
+                }
+            }
+        }
+        public function monitoring($link=null,$link1=null,$link2=null){
+            if(!isset($link)){
+                if($this->input->post()){
+                    $data=$this->main_model->cekproyek();
+                    if($data=="proyek") redirect(site_url("developer/monitoring/proyek"));
+                    elseif($data=="unit") redirect(site_url("developer/monitoring/unit"));
+                }
+                $this->load->view("developer/form_monitoring_view");
+            }
+            elseif($link=="proyek"){
+                if(!isset($link1)){
+                    $data["lihat_data_pembangunan"]=$this->main_model->monitoring_proyek(); 
+                    $this->load->view("developer/monitoring_proyek_view",$data);
+                }
+                elseif($link1=="pekerjaan_belum_selesai"){
+                    if(!isset($link2)){
+                        $data["monitoring_unit"]=$this->main_model->pekerjaan_belum_selesai(); 
+                        $this->load->view("developer/pekerjaan_belum_view",$data);
+                    }
+                    else{
+                        $this->main_model->simpan_session("id1",$link2); 
+                        redirect(site_url("developer/monitoring/proyek/pekerjaan_belum_selesai"));
+                    }
+                }
+            } 
+            elseif($link=="unit"){
+                $data["monitoring_unit"]=$this->main_model->monitoring_unit(); 
+                $this->load->view("developer/monitoring_unit_view",$data);
+            }
+        } 
+    }  
